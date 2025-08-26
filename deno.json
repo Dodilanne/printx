@@ -1,0 +1,10 @@
+{
+  "tasks": {
+    "run": "deno run --allow-read main.ts",
+    "compile": "deno compile --allow-read --output printx main.ts"
+  },
+  "imports": {
+    "@emurgo/cardano-serialization-lib-nodejs-gc": "npm:@emurgo/cardano-serialization-lib-nodejs-gc@^15.0.0",
+    "@std/assert": "jsr:@std/assert@1"
+  }
+}
