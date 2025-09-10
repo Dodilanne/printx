@@ -79,25 +79,28 @@ type AnyConstructor = {
   };
 };
 
-export async function main() {
-  const args = getArgs();
-  if (args.help !== "false") {
-    console.log(`
+const helpMessage = `
 Usage: printx [OPTIONS]
 
 Options:
   ${
-      argDefs.map((a) => `-${a.short}, --${a.long} ${a.description}`).join(
-        "\n  ",
-      )
-    }
-`);
+  argDefs.map((a) => `-${a.short}, --${a.long} ${a.description}`).join(
+    "\n  ",
+  )
+}
+`;
+
+export async function main() {
+  const args = getArgs();
+  if (args.help !== "false") {
+    console.error(helpMessage);
     Deno.exit(0);
   }
 
   const input = await getInput();
   if (!input) {
     console.error("No CBOR data provided");
+    console.error(helpMessage);
     Deno.exit(1);
   }
 
