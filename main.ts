@@ -33,14 +33,16 @@ async function getInput(): Promise<string | undefined> {
 }
 
 const argDefs = [
-  { short: "c", long: "constructor" },
-  { short: "i", long: "input" },
-  { short: "o", long: "output" },
+  { short: "h", long: "help", description: "Print this help message" },
+  { short: "c", long: "constructor", description: "Constructor name" },
+  { short: "i", long: "input", description: "Input format" },
+  { short: "o", long: "output", description: "Output format" },
 ] as const;
 
 type Args = Record<typeof argDefs[number]["long"], string>;
 
 const defaultArgs: Args = {
+  help: "false",
   constructor: "Transaction",
   input: "hex",
   output: "json",
@@ -58,9 +60,14 @@ function getArgs(): Args {
       argDef = argDefs.find((a) => a.short === arg.slice(1, 2));
     }
 
-    if (argDef && i + 1 < Deno.args.length) {
-      args[argDef.long] = Deno.args[i + 1];
-      i++;
+    if (argDef) {
+      const value = Deno.args[i + 1];
+      if (i + 1 >= Deno.args.length || value.startsWith("-")) {
+        args[argDef.long] = "true";
+      } else {
+        args[argDef.long] = value;
+        i++;
+      }
     }
   }
   return { ...defaultArgs, ...args };
@@ -73,6 +80,21 @@ type AnyConstructor = {
 };
 
 export async function main() {
+  const args = getArgs();
+  if (args.help !== "false") {
+    console.log(`
+Usage: printx [OPTIONS]
+
+Options:
+  ${
+      argDefs.map((a) => `-${a.short}, --${a.long} ${a.description}`).join(
+        "\n  ",
+      )
+    }
+`);
+    Deno.exit(0);
+  }
+
   const input = await getInput();
   if (!input) {
     console.error("No CBOR data provided");
@@ -80,8 +102,6 @@ export async function main() {
   }
 
   const cbor = input.replace(/"/g, "");
-
-  const args = getArgs();
 
   const constructorName = args.constructor as keyof typeof CSL;
   const constructor = CSL[constructorName] as AnyConstructor;
