@@ -112,7 +112,20 @@ export async function main() {
     throw new Error(`Constructor ${constructorName} not found`);
   }
 
-  const obj = constructor[`from_${args.input}`](cbor);
+  let obj: ReturnType<AnyConstructor[keyof AnyConstructor]>;
+
+  try {
+    obj = constructor[`from_${args.input}`](cbor);
+  } catch (error) {
+    // Try to parse as PlutusData if input cannot be parsed as a transaction
+    if (constructorName === defaultArgs.constructor) {
+      obj = (CSL.PlutusData as unknown as AnyConstructor)[`from_${args.input}`](
+        cbor,
+      );
+    } else {
+      throw error;
+    }
+  }
 
   const output = obj[`to_${args.output}`]();
 
